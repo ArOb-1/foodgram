@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_KEY_PASSPHRASE }}
-          source: "infra/docker-compose.production.yml,infra/nginx.conf,infra/.env"
+          source: "infra/docker-compose.production.yml,infra/nginx.conf,infra/.env,data/ingredients.csv"
           target: "foodgram"
       - uses: appleboy/ssh-action@v1.0.3
         with:

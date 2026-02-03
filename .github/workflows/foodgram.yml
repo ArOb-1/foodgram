@@ -38,7 +38,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_KEY_PASSPHRASE }}
           source: "infra/docker-compose.production.yml,infra/nginx.conf,infra/.env,data/ingredients.csv"
-          target: "foodgram"
+          target: "foodgram_tmp"
       - uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -46,6 +46,10 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           passphrase: ${{ secrets.SSH_KEY_PASSPHRASE }}
           script: |
+            mkdir -p foodgram/infra foodgram/data
+            cp -f foodgram_tmp/infra/* foodgram/infra/
+            cp -f foodgram_tmp/data/ingredients.csv foodgram/data/
+            rm -rf foodgram_tmp
             cd foodgram/infra
             docker compose -f docker-compose.production.yml pull
             docker compose -f docker-compose.production.yml up -d

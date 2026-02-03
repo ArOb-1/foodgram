@@ -3,7 +3,9 @@ from django.shortcuts import get_object_or_404
 from django.db.models import Sum
 from rest_framework import viewsets, status, mixins
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import (
+    IsAuthenticated, AllowAny, IsAuthenticatedOrReadOnly
+)
 from rest_framework.response import Response
 
 from django.contrib.auth import get_user_model
@@ -15,7 +17,8 @@ from recipes.models import (
 from .serializers import (
     RecipeReadSerializer, RecipeWriteSerializer, RecipeShortSerializer,
     IngredientSerializer, TagSerializer,
-    UserSerializer, UserCreateSerializer, UserWithRecipesSerializer, AvatarSerializer
+    UserSerializer, UserCreateSerializer,
+    UserWithRecipesSerializer, AvatarSerializer
 )
 from .filters import RecipeFilter, IngredientFilter
 from .permissions import IsAuthorOrReadOnly
@@ -49,37 +52,62 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeReadSerializer
         return RecipeWriteSerializer
 
-    @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated])
     def favorite(self, request, pk=None):
         recipe = self.get_object()
         user = request.user
         if request.method == 'POST':
             if Favourite.objects.filter(user=user, recipe=recipe).exists():
-                return Response({'errors': 'Рецепт уже в избранном.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'errors': 'Рецепт уже в избранном.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             Favourite.objects.create(user=user, recipe=recipe)
-            return Response(RecipeShortSerializer(recipe, context={'request': request}).data, status=status.HTTP_201_CREATED)
+            return Response(
+                RecipeShortSerializer(recipe,
+                                      context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
         favorite = Favourite.objects.filter(user=user, recipe=recipe).first()
         if not favorite:
-            return Response({'errors': 'Рецепт не в избранном.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': 'Рецепт не в избранном.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         favorite.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['post', 'delete'], permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['post', 'delete'],
+            permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, pk=None):
         recipe = self.get_object()
         user = request.user
         if request.method == 'POST':
             if ShoppingCart.objects.filter(user=user, recipe=recipe).exists():
-                return Response({'errors': 'Рецепт уже в списке покупок.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'errors': 'Рецепт уже в списке покупок.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             ShoppingCart.objects.create(user=user, recipe=recipe)
-            return Response(RecipeShortSerializer(recipe, context={'request': request}).data, status=status.HTTP_201_CREATED)
-        cart_item = ShoppingCart.objects.filter(user=user, recipe=recipe).first()
+            return Response(
+                RecipeShortSerializer(recipe,
+                                      context={'request': request}).data,
+                status=status.HTTP_201_CREATED
+            )
+        cart_item = ShoppingCart.objects.filter(
+            user=user,
+            recipe=recipe).first()
         if not cart_item:
-            return Response({'errors': 'Рецепта нет в списке покупок.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': 'Рецепта нет в списке покупок.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         cart_item.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    @action(detail=False, methods=['get'],
+            permission_classes=[IsAuthenticated])
     def download_shopping_cart(self, request):
         ingredients = RecipeIngredient.objects.filter(
             recipe__in_shopping_cart__user=request.user
@@ -88,12 +116,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
             'ingredient__measurement_unit'
         ).annotate(total=Sum('amount')).order_by('ingredient__name')
         lines = [
-            f"{item['ingredient__name']} ({item['ingredient__measurement_unit']}) — {item['total']}"
+            f"{item['ingredient__name']} "
+            f"({item['ingredient__measurement_unit']}) — {item['total']}"
             for item in ingredients
         ]
         content = '\n'.join(lines)
         response = HttpResponse(content, content_type='text/plain')
-        response['Content-Disposition'] = 'attachment; filename="shopping_list.txt"'
+        response['Content-Disposition'] = (
+            'attachment;filename="shopping_list.txt"'
+        )
         return response
 
     @action(detail=True, methods=['get'])
@@ -154,7 +185,8 @@ class UserViewSet(
         new_password = request.data.get('new_password')
         if not current_password or not new_password:
             return Response(
-                {'current_password': ['Обязательное поле.'], 'new_password': ['Обязательное поле.']},
+                {'current_password': ['Обязательное поле.'],
+                 'new_password': ['Обязательное поле.']},
                 status=status.HTTP_400_BAD_REQUEST
             )
         if not request.user.check_password(current_password):
@@ -182,7 +214,9 @@ class UserViewSet(
     def subscriptions(self, request):
         authors = User.objects.filter(following__user=request.user)
         page = self.paginate_queryset(authors)
-        serializer = UserWithRecipesSerializer(page or authors, many=True, context={'request': request})
+        serializer = UserWithRecipesSerializer(page or authors,
+                                               many=True,
+                                               context={'request': request})
         if page is not None:
             return self.get_paginated_response(serializer.data)
         return Response(serializer.data)
@@ -193,15 +227,29 @@ class UserViewSet(
         user = request.user
         if request.method == 'POST':
             if author == user:
-                return Response({'errors': 'Нельзя подписаться на самого себя.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'errors': 'Нельзя подписаться на самого себя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             if Subscription.objects.filter(user=user, author=author).exists():
-                return Response({'errors': 'Вы уже подписаны на этого пользователя.'}, status=status.HTTP_400_BAD_REQUEST)
+                return Response(
+                    {'errors': 'Вы уже подписаны на этого пользователя.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
             Subscription.objects.create(user=user, author=author)
-            serializer = UserWithRecipesSerializer(author, context={'request': request})
+            serializer = UserWithRecipesSerializer(
+                author,
+                context={'request': request}
+            )
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        subscription = Subscription.objects.filter(user=user, author=author).first()
+        subscription = Subscription.objects.filter(
+            user=user,
+            author=author).first()
         if not subscription:
-            return Response({'errors': 'Вы не подписаны на этого пользователя.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'errors': 'Вы не подписаны на этого пользователя.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 

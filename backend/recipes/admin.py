@@ -2,7 +2,7 @@ from django.contrib import admin
 
 from .models import (
     Recipe, Ingredient, Favourite, Tag,
-    RecipeIngredient, ShoppingCart, Subscription
+    RecipeIngredient, ShoppingCart
 )
 
 
@@ -14,13 +14,19 @@ class RecipeIngredientInline(admin.TabularInline):
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ('name', 'author',
-                    'cooking_time', 'pub_date', 'favorites_count'
+                    'cooking_time_min', 'show_tags', 'favorites_count'
                     )
     list_filter = ('tags', 'author')
     search_fields = ('name', 'author__username')
     inlines = [RecipeIngredientInline]
     filter_horizontal = ('tags',)
     readonly_fields = ('favorites_count',)
+
+    def cooking_time_min(self, obj):
+        return f"{obj.cooking_time} мин"
+
+    def show_tags(self, obj):
+        return ", ".join([tag.name for tag in obj.tags_set.all()])
 
     def favorites_count(self, obj):
         return obj.in_favorites.count()
@@ -29,7 +35,8 @@ class RecipeAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ('name', 'measurement_unit')
-    search_fields = ('name',)
+    list_filter = ('measurement_unit',)
+    search_fields = ('name', 'measurement_unit')
 
 
 @admin.register(Tag)
@@ -48,9 +55,3 @@ class FavoriteAdmin(admin.ModelAdmin):
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe')
     list_filter = ('user',)
-
-
-@admin.register(Subscription)
-class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'author', 'created')
-    list_filter = ('user', 'author')

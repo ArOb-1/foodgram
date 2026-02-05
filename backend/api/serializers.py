@@ -3,8 +3,9 @@ from rest_framework import serializers
 
 from recipes.models import (
     Ingredient, Recipe, RecipeIngredient,
-    Tag, Favourite, ShoppingCart, Subscription
+    Tag, Favourite, ShoppingCart
 )
+from users.models import Subscription
 from .fields import Base64ImageField
 
 

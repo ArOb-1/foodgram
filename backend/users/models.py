@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 
+from constants import MAX_LENTH_LONG, MAX_LENGTH_SHORT
+
 
 class User(AbstractUser):
     """Кастомная модель пользователя для Foodgram"""
@@ -8,21 +10,22 @@ class User(AbstractUser):
     email = models.EmailField(
         'Email адрес',
         unique=True,
-        max_length=254
+        max_length=MAX_LENTH_LONG
     )
     first_name = models.CharField(
         'Имя',
-        max_length=150
+        max_length=MAX_LENGTH_SHORT
     )
     last_name = models.CharField(
         'Фамилия',
-        max_length=150
+        max_length=MAX_LENGTH_SHORT
     )
     avatar = models.ImageField(
         'Аватар',
         upload_to='users/avatars/',
         blank=True,
-        null=True
+        null=True,
+        default=''
     )
     subscriptions = models.ManyToManyField(
         'self',
@@ -39,3 +42,33 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class Subscription(models.Model):
+    """Модель для подписок пользователей друг на друга"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='follower',
+        verbose_name='Подписчик'
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='following',
+        verbose_name='Автор'
+    )
+    created = models.DateTimeField(
+        'Дата подписки',
+        auto_now_add=True
+    )
+
+    class Meta:
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_subscription'
+            )
+        ]

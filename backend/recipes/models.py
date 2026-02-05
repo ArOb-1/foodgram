@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
+
+from constants import (
+    MAX_COOKING_TIME, MIN_COOKING_TIME, MIN_INGREDIENT_AMOUNT,
+    MAX_LENGTH_LONG, MAX_LENGTH_SHORT, MAX_INGREDIENT_AMOUNT
+)
 
 
 User = get_user_model()
@@ -10,12 +15,12 @@ class Tag(models.Model):
     """Модель для тегов рецептов"""
     name = models.CharField(
         'Название тега',
-        max_length=50,
+        max_length=MAX_LENGTH_SHORT,
         unique=True
     )
     slug = models.SlugField(
         'Slug тега',
-        max_length=50,
+        max_length=MAX_LENGTH_SHORT,
         unique=True
     )
 
@@ -31,16 +36,22 @@ class Ingredient(models.Model):
     """Модель для ингредиентов"""
     name = models.CharField(
         'Название ингредиента',
-        max_length=200
+        max_length=MAX_LENGTH_LONG
     )
     measurement_unit = models.CharField(
         'Единица измерения',
-        max_length=50
+        max_length=MAX_LENGTH_SHORT
     )
 
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('name', 'measurement_unit'),
+                name='unique_name_ingredient'
+            )
+        ]
 
     def __str__(self):
         return f'{self.name}, {self.measurement_unit}'
@@ -56,7 +67,7 @@ class Recipe(models.Model):
     )
     name = models.CharField(
         'Название рецепта',
-        max_length=200
+        max_length=MAX_LENGTH_LONG
     )
     image = models.ImageField(
         'Картинка рецепта',
@@ -80,8 +91,14 @@ class Recipe(models.Model):
         'Время приготовления (в минутах)',
         validators=[
             MinValueValidator(
-                1,
-                message='Время приготовления должно быть не менее 1 минуты'
+                MIN_COOKING_TIME,
+                message=f'Время приготовления должно'
+                f' быть не менее {MIN_COOKING_TIME} минуты'
+            ),
+            MaxValueValidator(
+                MAX_COOKING_TIME,
+                message=f'Время приготовления не должно превышать'
+                f' {MAX_COOKING_TIME} минут'
             )
         ]
     )
@@ -117,8 +134,14 @@ class RecipeIngredient(models.Model):
         'Количество',
         validators=[
             MinValueValidator(
-                1,
-                message='Количество должно быть не менее 1'
+                MIN_INGREDIENT_AMOUNT,
+                message=f'Количество должно'
+                f' быть не менее {MIN_INGREDIENT_AMOUNT}'
+            ),
+            MaxValueValidator(
+                MAX_INGREDIENT_AMOUNT,
+                message='Количество должно'
+                f' быть не менее {MAX_INGREDIENT_AMOUNT}'
             )
         ]
     )
@@ -181,35 +204,5 @@ class ShoppingCart(models.Model):
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
                 name='unique_shopping_cart'
-            )
-        ]
-
-
-class Subscription(models.Model):
-    """Модель для подписок пользователей друг на друга"""
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик'
-    )
-    author = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='following',
-        verbose_name='Автор'
-    )
-    created = models.DateTimeField(
-        'Дата подписки',
-        auto_now_add=True
-    )
-
-    class Meta:
-        verbose_name = 'Подписка'
-        verbose_name_plural = 'Подписки'
-        constraints = [
-            models.UniqueConstraint(
-                fields=('user', 'author'),
-                name='unique_subscription'
             )
         ]

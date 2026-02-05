@@ -12,8 +12,9 @@ from django.contrib.auth import get_user_model
 
 from recipes.models import (
     Recipe, Ingredient, Tag,
-    Favourite, ShoppingCart, Subscription, RecipeIngredient
+    Favourite, ShoppingCart, RecipeIngredient
 )
+from users.models import Subscription
 from .serializers import (
     RecipeReadSerializer, RecipeWriteSerializer, RecipeShortSerializer,
     IngredientSerializer, TagSerializer,

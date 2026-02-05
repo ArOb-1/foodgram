@@ -1,11 +1,14 @@
 from django_filters import rest_framework as filters
 
-from recipes.models import Recipe, Ingredient
+from recipes.models import Ingredient, Recipe, Tag
 
 
 class RecipeFilter(filters.FilterSet):
-    tags = filters.CharFilter(method='filter_tags')
-    author = filters.NumberFilter(field_name='author__id')
+    tags = filters.ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        queryset=Tag.objects.all(),
+        to_field_name='slug'
+    )
     is_favorited = filters.NumberFilter(method='filter_is_favorited')
     is_in_shopping_cart = filters.NumberFilter(
         method='filter_is_in_shopping_cart'
@@ -14,12 +17,6 @@ class RecipeFilter(filters.FilterSet):
     class Meta:
         model = Recipe
         fields = ('tags', 'author')
-
-    def filter_tags(self, queryset, name, value):
-        tags = self.request.query_params.getlist('tags')
-        if tags:
-            return queryset.filter(tags__slug__in=tags).distinct()
-        return queryset
 
     def filter_is_favorited(self, queryset, name, value):
         user = getattr(self.request, 'user', None)

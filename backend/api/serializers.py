@@ -1,11 +1,10 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from recipes.models import (
-    Ingredient, Recipe, RecipeIngredient,
-    Tag, Favourite, ShoppingCart
-)
+from recipes.models import (Favourite, Ingredient, Recipe, RecipeIngredient,
+                            ShoppingCart, Tag)
 from users.models import Subscription
+
 from .fields import Base64ImageField
 
 
@@ -23,6 +22,9 @@ class UserCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         return User.objects.create_user(**validated_data)
+
+    def to_representation(self, instance):
+        return UserSerializer(instance, context=self.context).data
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -157,6 +159,19 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Теги должны быть уникальными.')
         return value
 
+    def create_ingredients(self, recipe, ingredients_data):
+        """Создает связки рецепт-ингредиент."""
+        recipe_ingredients = []
+
+        for item in ingredients_data:
+            recipe_ingredients.append(
+                RecipeIngredient(
+                    recipe=recipe,
+                    ingredient=item['ingredient'],
+                    amount=item['amount']
+                )
+            )
+
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')
         tags_data = validated_data.pop('tags')
@@ -164,34 +179,20 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             author=self.context['request'].user, **validated_data
         )
         recipe.tags.set(tags_data)
-        RecipeIngredient.objects.bulk_create([
-            RecipeIngredient(
-                recipe=recipe,
-                ingredient=item['ingredient'],
-                amount=item['amount']
-            )
-            for item in ingredients_data
-        ])
+        self.create_ingredients(self, recipe, ingredients_data)
         return recipe
 
     def update(self, instance, validated_data):
         ingredients_data = validated_data.pop('ingredients', None)
         tags_data = validated_data.pop('tags', None)
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
-        instance.save()
+        instance = super().update(instance, validated_data)
         if tags_data is not None:
             instance.tags.set(tags_data)
         if ingredients_data is not None:
             instance.recipe_ingredients.all().delete()
-            RecipeIngredient.objects.bulk_create([
-                RecipeIngredient(
-                    recipe=instance,
-                    ingredient=item['ingredient'],
-                    amount=item['amount']
-                )
-                for item in ingredients_data
-            ])
+            self.create_ingredients(self,
+                                    ingredients_data=ingredients_data,
+                                    recipe=instance)
         return instance
 
     def to_representation(self, instance):

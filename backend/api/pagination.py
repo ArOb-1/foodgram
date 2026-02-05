@@ -1,4 +1,4 @@
-from constants import PAGE_LIMIT
+from .constants import PAGE_LIMIT
 from rest_framework.pagination import PageNumberPagination
 
 

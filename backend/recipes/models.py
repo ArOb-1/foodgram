@@ -1,6 +1,6 @@
-from constants import (MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT,
-                       MAX_LENGTH_LONG, MAX_LENGTH_SHORT, MIN_COOKING_TIME,
-                       MIN_INGREDIENT_AMOUNT)
+from .constants import (MAX_COOKING_TIME, MAX_INGREDIENT_AMOUNT,
+                        MAX_LENGTH_LONG, MAX_LENGTH_SHORT, MIN_COOKING_TIME,
+                        MIN_INGREDIENT_AMOUNT)
 from django.contrib.auth import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models

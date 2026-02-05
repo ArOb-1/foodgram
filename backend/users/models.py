@@ -1,4 +1,4 @@
-from constants import MAX_LENGTH_SHORT, MAX_LENTH_LONG
+from .constants import MAX_LENGTH_SHORT, MAX_LENGTH_LONG
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
@@ -9,7 +9,7 @@ class User(AbstractUser):
     email = models.EmailField(
         'Email адрес',
         unique=True,
-        max_length=MAX_LENTH_LONG
+        max_length=MAX_LENGTH_LONG
     )
     first_name = models.CharField(
         'Имя',

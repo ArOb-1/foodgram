@@ -161,16 +161,15 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
 
     def create_ingredients(self, recipe, ingredients_data):
         """Создает связки рецепт-ингредиент."""
-        recipe_ingredients = []
-
-        for item in ingredients_data:
-            recipe_ingredients.append(
-                RecipeIngredient(
-                    recipe=recipe,
-                    ingredient=item['ingredient'],
-                    amount=item['amount']
-                )
+        recipe_ingredients = [
+            RecipeIngredient(
+                recipe=recipe,
+                ingredient=item['ingredient'],
+                amount=item['amount']
             )
+            for item in ingredients_data
+        ]
+        RecipeIngredient.objects.bulk_create(recipe_ingredients)
 
     def create(self, validated_data):
         ingredients_data = validated_data.pop('ingredients')

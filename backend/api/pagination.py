@@ -1,5 +1,6 @@
-from .constants import PAGE_LIMIT
 from rest_framework.pagination import PageNumberPagination
+
+from .constants import PAGE_LIMIT
 
 
 class LimitPageNumberPagination(PageNumberPagination):

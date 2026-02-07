@@ -21,10 +21,10 @@ class RecipeAdmin(admin.ModelAdmin):
     readonly_fields = ('favorites_count',)
 
     def cooking_time_min(self, obj):
-        return f"{obj.cooking_time} мин"
+        return f'{obj.cooking_time} мин'
 
     def show_tags(self, obj):
-        return ", ".join([tag.name for tag in obj.tags_set.all()])
+        return ', '.join([tag.name for tag in obj.tags_set.all()])
 
     def favorites_count(self, obj):
         return obj.in_favorites.count()

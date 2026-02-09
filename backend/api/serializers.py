@@ -178,7 +178,7 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             author=self.context['request'].user, **validated_data
         )
         recipe.tags.set(tags_data)
-        self.create_ingredients(self, recipe, ingredients_data)
+        self.create_ingredients(recipe, ingredients_data)
         return recipe
 
     def update(self, instance, validated_data):
@@ -189,9 +189,10 @@ class RecipeWriteSerializer(serializers.ModelSerializer):
             instance.tags.set(tags_data)
         if ingredients_data is not None:
             instance.recipe_ingredients.all().delete()
-            self.create_ingredients(self,
-                                    ingredients_data=ingredients_data,
-                                    recipe=instance)
+            self.create_ingredients(
+                recipe=instance,
+                ingredients_data=ingredients_data
+            )
         return instance
 
     def to_representation(self, instance):

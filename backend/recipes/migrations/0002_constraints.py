@@ -19,8 +19,4 @@ class Migration(migrations.Migration):
             model_name='shoppingcart',
             constraint=models.UniqueConstraint(fields=('user', 'recipe'), name='unique_shopping_cart'),
         ),
-        migrations.AddConstraint(
-            model_name='subscription',
-            constraint=models.UniqueConstraint(fields=('user', 'author'), name='unique_subscription'),
-        ),
     ]

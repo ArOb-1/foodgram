@@ -123,7 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ).annotate(total=Sum('amount')).order_by('ingredient__name')
         return create_shopping_list_response(ingredients)
 
-    @action(detail=True, methods=['get'])
+    @action(detail=True, methods=['get'], url_path='get-link')
     def get_link(self, request, pk=None):
         recipe = self.get_object()
         code = to_base36(recipe.id)

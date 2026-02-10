@@ -23,7 +23,7 @@ def create_shopping_list_response(ingredients):
     return response
 
 
-def to_base36(self, num):
+def to_base36(num):
     chars = '0123456789abcdefghijklmnopqrstuvwxyz'
     if num == 0:
         return '0'

@@ -24,7 +24,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return User.objects.create_user(**validated_data)
 
     def to_representation(self, instance):
-        return UserSerializer(instance, context=self.context).data
+        return super().to_representation(instance)
 
 
 class UserSerializer(serializers.ModelSerializer):
